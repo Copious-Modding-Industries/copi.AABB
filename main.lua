@@ -1,4 +1,11 @@
+dofile_once("data/scripts/debug/keycodes.lua")
+
+if GuiEnabled == nil then GuiEnabled = true end
+if InputIsKeyJustDown(Key_j) then GuiEnabled = not GuiEnabled end
+if not GuiEnabled then return end
+
 Gui = Gui or GuiCreate()
+GuiZSet(Gui, 100)
 GuiStartFrame(Gui)
 GuiIdPushString(Gui, "copi.AABB")
 VResX = VResX or tonumber(MagicNumbersGetValue("VIRTUAL_RESOLUTION_X")) or 0
@@ -22,31 +29,72 @@ local function world_to_gui(gui, world_x, world_y, res_x, res_y)
     return gui_x, gui_y
 end
 
+local function world_to_gui_scale(gui, world_w, world_h, res_x, res_y)
+    local s_w, s_h = GuiGetScreenDimensions(gui)
+    local gui_x = world_w * s_w / res_x
+    local gui_y = world_h * s_h / res_y
+    return gui_x, gui_y
+end
+
+local function rect_on_screen(gui, x, y, w, h)
+    local s_w, s_h = GuiGetScreenDimensions(gui)
+    return x + w >= 0 and x < s_w and y + h >= 0 and y < s_h
+end
+
 local types = {
     {
         typename = "AreaDamageComponent",
-        color = {
-            r = 1,
-            g = 0,
-            b = 0,
-            a = 1,
-        },
+        filepath = "mods/copi.AABB/9piece_red.png",
         aabb_fn = function (comp)
-            
-            --return min_x, max_x, min_y, max_y
+            local min_x, min_y = ComponentGetValue2(comp, "aabb_min")
+            local max_x, max_y = ComponentGetValue2(comp, "aabb_max")
+            local width = max_x - min_x
+            local height = max_y - min_y
+            return min_x, min_y, width, height
         end
-    }
+    },
+    {
+        typename = "HitboxComponent",
+        filepath = "mods/copi.AABB/9piece.png",
+        aabb_fn = function (comp)
+            local min_x = ComponentGetValue2(comp, "aabb_min_x")
+            local min_y = ComponentGetValue2(comp, "aabb_min_y")
+            local max_x = ComponentGetValue2(comp, "aabb_max_x")
+            local max_y = ComponentGetValue2(comp, "aabb_max_y")
+            local width = max_x - min_x
+            local height = max_y - min_y
+            return min_x, min_y, width, height
+        end
+    },
+    {
+        typename = "MaterialAreaCheckerComponent",
+        filepath = "mods/copi.AABB/9piece_blue.png",
+        aabb_fn = function (comp)
+            local min_x, min_y, max_x, max_y = ComponentGetValue2(comp, "area_aabb")
+            local width = max_x - min_x
+            local height = max_y - min_y
+            return min_x, min_y, width, height
+        end
+    },
+    {
+        typename = "CollisionTriggerComponent",
+        filepath = "mods/copi.AABB/9piece_red.png",
+        aabb_fn = function (comp)
+            local width = ComponentGetValue2(comp, "width")
+            local height = ComponentGetValue2(comp, "height")
+            return width * -0.5, height * -0.5, width, height
+        end
+    },
 }
 
 local eid = GetUpdatedEntityID()
 local px, py = EntityGetTransform(eid)
 
 -- loop over entities
-local targets = EntityGetInRadius(px, py, 256) or {}
+local targets = EntityGetInRadius(px, py, 512) or {}
 for i = 1, #targets do
     local target = targets[i]
     local target_x, target_y = EntityGetTransform(target)
-    local t_gui_x, t_gui_y = world_to_gui(Gui, target_x, target_y, VResX, VResY)
 
     -- loop over component types
     for j = 1, #types do
@@ -56,9 +104,13 @@ for i = 1, #targets do
         local comps = EntityGetComponent(target, type.typename) or {}
         for k = 1, #comps do
             local comp = comps[k]
-            -- Do some shit here to calculate the gui width and height of the AABB, then pass them in to 
-            -- PUDY PLEASE HELP ME WITH THIS
-            GuiImageNinePiece(Gui, comp, t_gui_x, t_gui_y, SOMETHING, SOMETHING, type.color.a, "mods/copi.AABB/9piece.png", "mods/copi.AABB/9piece.png")
+            local left, top, width, height = type.aabb_fn(comp)
+            local guiLeft, guiTop = world_to_gui(Gui, left + target_x, top + target_y, VResX, VResY)
+            local guiWidth, guiHeight = world_to_gui_scale(Gui, width, height, VResX, VResY)
+            local rect_on_screen = rect_on_screen(Gui, guiLeft, guiTop, guiWidth, guiHeight)
+            if rect_on_screen then
+                GuiImageNinePiece(Gui, comp, guiLeft, guiTop, guiWidth, guiHeight, 1, type.filepath, type.filepath)
+            end
         end
     end
 end

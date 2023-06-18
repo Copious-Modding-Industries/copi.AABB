@@ -9,7 +9,3 @@ function OnPlayerSpawned( player_entity )
         })
     end
 end
-
-function OnPlayerDied( player_entity ) 
-    GamePrint("fuckin skill issue")
-end
