@@ -92,42 +92,6 @@ mod_settings =
             end
         end
     },
-    {
-        id = "copi.aabb.show_key",
-        ui_name = "Show/Hide key:",
-        ui_description = "The keybind used to show and hide the overlay",
-        value_default = false,
-        scope = MOD_SETTING_SCOPE_NEW_GAME,
-        ui_fn = function( mod_id, gui, in_main_menu, im_id, setting )
-            if Waiting==nil then Waiting = false end
-            local current = ModSettingGet(setting.id) or 13
-            local text = Waiting and "Press Any Key" or "Click To Rebind"
-            GuiLayoutBeginVertical(gui, 0, 0, false, 0, 0)
-                GuiColorSetForNextWidget(gui, 1.0, 1.0, 1.0, 0.75)
-                GuiText(gui, 0, 0, setting.ui_name)
-                GuiLayoutBeginHorizontal(gui, 0, 0, false, 0, 0)
-                    GuiColorSetForNextWidget(gui, 1.0, 1.0, 1.0, 0.5)
-                    GuiText(gui, 6, 0, "Current Key: ")
-                    GuiText(gui, 0, 0, string_by_id[current])
-                GuiLayoutEnd(gui)
-                local lmb, rmb = GuiButton(gui, im_id, 6, 0, table.concat{"[", text, "]"})
-                GuiTooltip(gui, setting.ui_description, "LMB to change binding, RMB to reset binding")
-            GuiLayoutEnd(gui)
-            if lmb then Waiting = true
-            elseif rmb then Waiting = false ModSettingSet(setting.id, setting.value_default)
-            end
-            if Waiting then
-                dofile_once("data/scripts/debug/keycodes.lua")
-                for i=1,#keys do
-                    if InputIsKeyJustDown(keys[i]) then
-                        ModSettingSet(setting.id, keys[i])
-                        Waiting = false
-                        break
-                    end
-                end
-            end
-        end
-    },
 }
 
 function ModSettingsUpdate(init_scope)

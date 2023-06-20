@@ -48,7 +48,7 @@ if display == "true" then
     local types = {
         {
             typename = "AreaDamageComponent",
-            filepath = "mods/copi.AABB/9piece_red.png",
+            filepath = "mods/copi.AABB/9piece_hurt.png",
             aabb_fn = function(comp)
                 local min_x, min_y = ComponentGetValue2(comp, "aabb_min")
                 local max_x, max_y = ComponentGetValue2(comp, "aabb_max")
@@ -59,7 +59,14 @@ if display == "true" then
         },
         {
             typename = "HitboxComponent",
-            filepath = "mods/copi.AABB/9piece.png",
+            filepath = function ( entity, comp )
+                if EntityHasTag(entity, "workshop") then
+                    return "mods/copi.AABB/9piece_workshop.png"
+                elseif ComponentHasTag(comp, "hitbox_weak_spot") then
+                    return "mods/copi.AABB/9piece_weakspot.png"
+                end
+                return "mods/copi.AABB/9piece.png"
+            end,
             aabb_fn = function(comp)
                 local min_x = ComponentGetValue2(comp, "aabb_min_x")
                 local min_y = ComponentGetValue2(comp, "aabb_min_y")
@@ -72,7 +79,7 @@ if display == "true" then
         },
         {
             typename = "MaterialAreaCheckerComponent",
-            filepath = "mods/copi.AABB/9piece_blue.png",
+            filepath = "mods/copi.AABB/9piece_material.png",
             aabb_fn = function(comp)
                 local min_x, min_y, max_x, max_y = ComponentGetValue2(comp, "area_aabb")
                 local width = max_x - min_x
@@ -82,7 +89,7 @@ if display == "true" then
         },
         {
             typename = "CollisionTriggerComponent",
-            filepath = "mods/copi.AABB/9piece_red.png",
+            filepath = "mods/copi.AABB/9piece_collision.png",
             aabb_fn = function(comp)
                 local width = ComponentGetValue2(comp, "width")
                 local height = ComponentGetValue2(comp, "height")
@@ -102,18 +109,21 @@ if display == "true" then
 
         -- loop over component types
         for j = 1, #types do
-            local type = types[j]
+            local thistype = types[j]
 
-            -- loop over components of said type
-            local comps = EntityGetComponent(target, type.typename) or {}
+            -- loop over components of said thistype
+            local comps = EntityGetComponent(target, thistype.typename) or {}
             for k = 1, #comps do
                 local comp = comps[k]
-                local left, top, width, height = type.aabb_fn(comp)
+                local left, top, width, height = thistype.aabb_fn(comp)
                 local guiLeft, guiTop = world_to_gui(Gui, left + target_x, top + target_y, VResX, VResY)
                 local guiWidth, guiHeight = world_to_gui_scale(Gui, width, height, VResX, VResY)
-                local rect_on_screen = rect_on_screen(Gui, guiLeft, guiTop, guiWidth, guiHeight)
-                if rect_on_screen then
-                    GuiImageNinePiece(Gui, comp, guiLeft, guiTop, guiWidth, guiHeight, 1, type.filepath, type.filepath)
+                if rect_on_screen(Gui, guiLeft, guiTop, guiWidth, guiHeight) then
+                    local filepath = thistype.filepath
+                    if type(thistype.filepath) == "function" then
+                        filepath = thistype.filepath(target, comp)
+                    end
+                    GuiImageNinePiece(Gui, comp, guiLeft, guiTop, guiWidth, guiHeight, 1, filepath, filepath)
                 end
             end
         end
