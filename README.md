@@ -1,5 +1,5 @@
 # copi.AABB
-Visualizes AABBs. 
+Visualizes AABBs. Default key is J, rebind in mod settings.
 
 # Install Instructions
 
