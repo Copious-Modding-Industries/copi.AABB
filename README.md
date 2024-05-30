@@ -7,7 +7,7 @@ Visualizes AABBs.
 
  - Press the *[Download Zip](https://github.com/Copious-Modding-Industries/copis_things/archive/refs/heads/main.zip)* button
  - Extract into your noita mod folder (`C:/Program Files (x86)/Steam/steamapps/common/Noita/mods/` for steam users)
- - Rename `copis_things-main` to `copis_things` **⚠ THE MOD WILL NOT WORK IF YOU SKIP THIS STEP. ⚠**
+ - Rename `copi.AABB-main` to `copi.AABB` **⚠ THE MOD WILL NOT WORK IF YOU SKIP THIS STEP. ⚠**
 
 ### Cloning Repository
 
